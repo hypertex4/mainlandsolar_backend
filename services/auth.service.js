@@ -271,11 +271,11 @@ const getProfile = async (userId) => {
 };
 
 const updateProfile = async (userId, data, meta = {}) => {
-  await userRepo.update(userId, data);
+  const user = await userRepo.updateAndReturn(userId, data);
 
   await activityService.log(userId, 'profile_updated', { fields: Object.keys(data) }, meta);
 
-  return userRepo.findById(userId);
+  return user;
 };
 
 const updatePassword = async (userId, { current_password, new_password }, meta = {}) => {
