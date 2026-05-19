@@ -35,4 +35,9 @@ module.exports = {
   CLIENT_URL: process.env.CLIENT_URL || "http://localhost:4500",
   CORS_ORIGINS: process.env.CORS_ORIGINS || null,
   APP_NAME: process.env.APP_NAME || "Mainland Solar",
+
+  PAYSTACK_SECRET_KEY: process.env.PAYSTACK_SECRET_KEY,
+  PAYSTACK_PUBLIC_KEY: process.env.PAYSTACK_PUBLIC_KEY,
+  PAYSTACK_WEBHOOK_SECRET: process.env.PAYSTACK_SECRET_KEY,
+  PAYMENT_CALLBACK_URL: process.env.PAYMENT_CALLBACK_URL || 'http://localhost:5000/api/v1/payments/callback',
 };
