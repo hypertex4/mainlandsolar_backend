@@ -13,15 +13,6 @@ const createOrder = async (userId, { addressId, notes }) => {
   const items = await cartRepo.getItems(userCart.id);
   if (!items.length) throw new AppError('Your cart is empty', 400);
 
-  const shippingAddress = {
-    full_name: address.full_name,
-    phone: address.phone,
-    address_line: address.address_line,
-    city: address.city,
-    state: address.state,
-    label: address.label || null,
-  };
-
   const subtotal = items.reduce((sum, item) => sum + parseFloat(item.unit_price) * item.quantity, 0);
   const shippingFee = 0;
   const total = subtotal + shippingFee;
@@ -35,9 +26,23 @@ const createOrder = async (userId, { addressId, notes }) => {
     subtotal: parseFloat(item.unit_price) * item.quantity,
   }));
 
+  // Store full address snapshot in delivery_address as JSON string; city/state get own columns
   const orderId = await orderRepo.create(
     userId,
-    { subtotal, shipping_fee: shippingFee, total, shipping_address: shippingAddress, notes },
+    {
+      subtotal,
+      shipping_fee: shippingFee,
+      total,
+      delivery_address: JSON.stringify({
+        full_name: address.full_name,
+        phone: address.phone,
+        address_line: address.address_line,
+        label: address.label || null,
+      }),
+      delivery_city: address.city,
+      delivery_state: address.state,
+      notes,
+    },
     orderItems
   );
 
@@ -70,7 +75,7 @@ const getOrder = async (userId, orderId) => {
 const cancelOrder = async (userId, orderId) => {
   const order = await orderRepo.findById(orderId, userId);
   if (!order) throw new AppError('Order not found', 404);
-  if (order.status !== 'pending') {
+  if (order.order_status !== 'pending') {
     throw new AppError('Only pending orders can be cancelled', 400);
   }
   await orderRepo.updateStatus(orderId, 'cancelled');

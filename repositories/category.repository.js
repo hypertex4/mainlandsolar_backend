@@ -2,13 +2,12 @@ const { pool } = require('../config/database');
 
 const findAll = async () => {
   const [rows] = await pool.query(
-    'SELECT id, name, slug, parent_id, description, image, sort_order FROM product_categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC'
+    `SELECT id, name, slug, parent_id, description, image, sort_order
+     FROM product_categories WHERE status = 'active' ORDER BY sort_order ASC, name ASC`
   );
 
   const map = {};
-  rows.forEach((row) => {
-    map[row.id] = { ...row, children: [] };
-  });
+  rows.forEach((row) => { map[row.id] = { ...row, children: [] }; });
 
   const roots = [];
   rows.forEach((row) => {
@@ -24,7 +23,7 @@ const findAll = async () => {
 
 const findBySlug = async (slug) => {
   const [rows] = await pool.query(
-    'SELECT * FROM product_categories WHERE slug = ? AND is_active = 1 LIMIT 1',
+    "SELECT * FROM product_categories WHERE slug = ? AND status = 'active' LIMIT 1",
     [slug]
   );
   return rows[0] || null;
@@ -32,7 +31,7 @@ const findBySlug = async (slug) => {
 
 const findById = async (id) => {
   const [rows] = await pool.query(
-    'SELECT * FROM product_categories WHERE id = ? AND is_active = 1 LIMIT 1',
+    "SELECT * FROM product_categories WHERE id = ? AND status = 'active' LIMIT 1",
     [id]
   );
   return rows[0] || null;

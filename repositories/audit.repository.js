@@ -1,18 +1,23 @@
 const { pool } = require('../config/database');
 
 const create = async (data) => {
+  const auditRef = 'SA-' + Date.now();
   const [result] = await pool.query(
-    `INSERT INTO solar_audits (user_id, full_name, phone, email, address, city, state, building_type, monthly_bill, preferred_date, preferred_time, notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO solar_audits
+       (audit_ref, user_id, customer_name, customer_phone, customer_email,
+        address, city, state, building_type, monthly_bill,
+        preferred_date, preferred_time, audit_notes, source)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'website')`,
     [
+      auditRef,
       data.user_id || null,
       data.full_name,
       data.phone,
       data.email,
       data.address,
       data.city,
-      data.state,
-      data.building_type,
+      data.state || null,
+      data.building_type || null,
       data.monthly_bill || null,
       data.preferred_date,
       data.preferred_time,

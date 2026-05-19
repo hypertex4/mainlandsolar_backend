@@ -8,7 +8,7 @@ const env = require('../config/env');
 const initiatePayment = async (userId, orderId) => {
   const order = await orderRepo.findById(orderId, userId);
   if (!order) throw new AppError('Order not found', 404);
-  if (order.payment_status !== 'unpaid') {
+  if (order.payment_status !== 'unpaid' && order.payment_status !== 'pending_confirmation') {
     throw new AppError('Order has already been paid or refunded', 400);
   }
 
@@ -72,7 +72,7 @@ const handleCallback = async (reference) => {
   await paymentRepo.updateStatus(payment.id, newStatus, gatewayData, paidAt);
 
   if (isSuccess) {
-    await orderRepo.updatePaymentStatus(payment.order_id, 'paid');
+    await orderRepo.updatePaymentStatus(payment.order_id, 'confirmed');
     await orderRepo.updateStatus(payment.order_id, 'confirmed');
   }
 

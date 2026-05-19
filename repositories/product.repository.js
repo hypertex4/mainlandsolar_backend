@@ -2,7 +2,7 @@ const { pool } = require('../config/database');
 
 const findAll = async ({ page = 1, limit = 30, categoryId, brandId, minPrice, maxPrice, capacity, search, sort, isFeatured } = {}) => {
   const offset = (page - 1) * limit;
-  const conditions = ['p.is_active = 1'];
+  const conditions = ["p.status = 'active'"];
   const params = [];
 
   if (categoryId) {
@@ -41,63 +41,59 @@ const findAll = async ({ page = 1, limit = 30, categoryId, brandId, minPrice, ma
 
   let orderBy;
   switch (sort) {
-    case 'price_asc':
-      orderBy = 'p.price ASC';
-      break;
-    case 'price_desc':
-      orderBy = 'p.price DESC';
-      break;
-    case 'newest':
-      orderBy = 'p.created_at DESC';
-      break;
-    case 'popular':
-      orderBy = 'p.sort_order ASC';
-      break;
-    default:
-      orderBy = 'p.sort_order ASC, p.created_at DESC';
+    case 'price_asc':  orderBy = 'p.price ASC';          break;
+    case 'price_desc': orderBy = 'p.price DESC';         break;
+    case 'newest':     orderBy = 'p.created_at DESC';    break;
+    case 'popular':    orderBy = 'p.sort_order ASC';     break;
+    default:           orderBy = 'p.sort_order ASC, p.created_at DESC';
   }
 
   const selectCols = `
-    p.id, p.name, p.slug, p.sku, p.price, p.compare_price,
-    p.category_id, p.brand_id, p.capacity, p.stock_quantity,
-    p.is_in_stock, p.is_featured, p.sort_order, p.created_at,
+    p.id, p.name, p.slug, p.sku, p.price, p.compare_at_price AS compare_price,
+    p.category_id, p.brand_id, p.capacity, p.stock_qty AS stock_quantity,
+    (p.stock_qty > 0) AS is_in_stock,
+    p.is_featured, p.sort_order, p.created_at,
     c.name AS category_name, b.name AS brand_name,
-    pi.url AS primary_image, pi.alt_text AS primary_image_alt
+    pi.image_path AS primary_image
   `;
 
   const joins = `
     LEFT JOIN product_categories c ON c.id = p.category_id
     LEFT JOIN brands b ON b.id = p.brand_id
-    LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
+    LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_featured = 1
   `;
 
   let rows, total;
 
   try {
-    const dataQuery = `SELECT ${selectCols} FROM products p ${joins} WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
-    const countQuery = `SELECT COUNT(DISTINCT p.id) AS total FROM products p WHERE ${where}`;
-
-    const [dataRows] = await pool.query(dataQuery, [...params, limit, offset]);
-    const [countRows] = await pool.query(countQuery, params);
-
+    const [dataRows] = await pool.query(
+      `SELECT ${selectCols} FROM products p ${joins} WHERE ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+    const [[{ total: cnt }]] = await pool.query(
+      `SELECT COUNT(DISTINCT p.id) AS total FROM products p WHERE ${where}`,
+      params
+    );
     rows = dataRows;
-    total = countRows[0].total;
+    total = cnt;
   } catch (err) {
     if (search && err.message && err.message.includes('FULLTEXT')) {
       const paramsWithoutSearch = params.slice(0, params.length - 1);
       const likeConditions = [...conditions.filter((c) => c !== searchClause)];
       likeConditions.push('(p.name LIKE ? OR p.description LIKE ?)');
       const likeParams = [...paramsWithoutSearch, `%${search}%`, `%${search}%`];
-
       const likeWhere = likeConditions.join(' AND ');
-      const dataQuery = `SELECT ${selectCols} FROM products p ${joins} WHERE ${likeWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
-      const countQuery = `SELECT COUNT(DISTINCT p.id) AS total FROM products p WHERE ${likeWhere}`;
 
-      const [dataRows] = await pool.query(dataQuery, [...likeParams, limit, offset]);
-      const [countRows] = await pool.query(countQuery, likeParams);
-
+      const [dataRows] = await pool.query(
+        `SELECT ${selectCols} FROM products p ${joins} WHERE ${likeWhere} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+        [...likeParams, limit, offset]
+      );
+      const [[{ total: cnt }]] = await pool.query(
+        `SELECT COUNT(DISTINCT p.id) AS total FROM products p WHERE ${likeWhere}`,
+        likeParams
+      );
       rows = dataRows;
-      total = countRows[0].total;
+      total = cnt;
     } else {
       throw err;
     }
@@ -108,18 +104,21 @@ const findAll = async ({ page = 1, limit = 30, categoryId, brandId, minPrice, ma
 
 const findBySlug = async (slug) => {
   const [rows] = await pool.query(
-    `SELECT p.*, c.name AS category_name, b.name AS brand_name
+    `SELECT p.*, p.compare_at_price AS compare_price, p.stock_qty AS stock_quantity,
+            (p.stock_qty > 0) AS is_in_stock,
+            c.name AS category_name, b.name AS brand_name
      FROM products p
      LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
-     WHERE p.slug = ? AND p.is_active = 1 LIMIT 1`,
+     WHERE p.slug = ? AND p.status = 'active' LIMIT 1`,
     [slug]
   );
   if (!rows[0]) return null;
 
   const product = rows[0];
   const [images] = await pool.query(
-    'SELECT id, url, alt_text, is_primary, sort_order FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, is_primary DESC',
+    `SELECT id, image_path AS url, is_featured AS is_primary, sort_order
+     FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, is_featured DESC`,
     [product.id]
   );
   product.images = images;
@@ -128,18 +127,21 @@ const findBySlug = async (slug) => {
 
 const findById = async (id) => {
   const [rows] = await pool.query(
-    `SELECT p.*, c.name AS category_name, b.name AS brand_name
+    `SELECT p.*, p.compare_at_price AS compare_price, p.stock_qty AS stock_quantity,
+            (p.stock_qty > 0) AS is_in_stock,
+            c.name AS category_name, b.name AS brand_name
      FROM products p
      LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
-     WHERE p.id = ? AND p.is_active = 1 LIMIT 1`,
+     WHERE p.id = ? AND p.status = 'active' LIMIT 1`,
     [id]
   );
   if (!rows[0]) return null;
 
   const product = rows[0];
   const [images] = await pool.query(
-    'SELECT id, url, alt_text, is_primary, sort_order FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, is_primary DESC',
+    `SELECT id, image_path AS url, is_featured AS is_primary, sort_order
+     FROM product_images WHERE product_id = ? ORDER BY sort_order ASC, is_featured DESC`,
     [product.id]
   );
   product.images = images;
@@ -148,15 +150,15 @@ const findById = async (id) => {
 
 const findFeatured = async (limit = 8) => {
   const [rows] = await pool.query(
-    `SELECT p.id, p.name, p.slug, p.sku, p.price, p.compare_price,
-            p.capacity, p.stock_quantity, p.is_in_stock, p.sort_order,
-            c.name AS category_name, b.name AS brand_name,
-            pi.url AS primary_image, pi.alt_text AS primary_image_alt
+    `SELECT p.id, p.name, p.slug, p.sku, p.price, p.compare_at_price AS compare_price,
+            p.capacity, p.stock_qty AS stock_quantity, (p.stock_qty > 0) AS is_in_stock,
+            p.sort_order, c.name AS category_name, b.name AS brand_name,
+            pi.image_path AS primary_image
      FROM products p
      LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
-     LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
-     WHERE p.is_featured = 1 AND p.is_active = 1
+     LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_featured = 1
+     WHERE p.is_featured = 1 AND p.status = 'active'
      ORDER BY p.sort_order ASC, p.created_at DESC
      LIMIT ?`,
     [limit]
@@ -166,8 +168,8 @@ const findFeatured = async (limit = 8) => {
 
 const decrementStock = async (productId, quantity, connection) => {
   await connection.query(
-    'UPDATE products SET stock_quantity = stock_quantity - ?, is_in_stock = IF(stock_quantity - ? <= 0, 0, 1) WHERE id = ?',
-    [quantity, quantity, productId]
+    'UPDATE products SET stock_qty = stock_qty - ? WHERE id = ?',
+    [quantity, productId]
   );
 };
 

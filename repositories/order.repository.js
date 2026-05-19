@@ -3,17 +3,21 @@ const { pool } = require('../config/database');
 const create = async (userId, data, items) => {
   const connection = await pool.getConnection();
   try {
-    const orderNumber = 'MS-' + Date.now();
+    const orderRef = 'MS-' + Date.now();
     const [orderResult] = await connection.query(
-      `INSERT INTO orders (order_number, user_id, status, subtotal, shipping_fee, total, payment_status, shipping_address, notes)
-       VALUES (?, ?, 'pending', ?, ?, ?, 'unpaid', ?, ?)`,
+      `INSERT INTO orders
+         (order_ref, user_id, order_status, subtotal, delivery_fee, total_amount,
+          payment_status, delivery_address, delivery_city, delivery_state, notes)
+       VALUES (?, ?, 'pending', ?, ?, ?, 'unpaid', ?, ?, ?, ?)`,
       [
-        orderNumber,
+        orderRef,
         userId,
         data.subtotal,
         data.shipping_fee || 0,
         data.total,
-        JSON.stringify(data.shipping_address),
+        data.delivery_address,
+        data.delivery_city,
+        data.delivery_state,
         data.notes || null,
       ]
     );
@@ -21,7 +25,8 @@ const create = async (userId, data, items) => {
 
     for (const item of items) {
       await connection.query(
-        `INSERT INTO order_items (order_id, product_id, product_name, product_sku, quantity, unit_price, subtotal)
+        `INSERT INTO order_items
+           (order_id, product_id, product_name, product_sku, qty, unit_price, subtotal)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
           orderId,
@@ -93,17 +98,17 @@ const findByIdAdmin = async (id) => {
 };
 
 const updateStatus = async (id, status) => {
-  await pool.query('UPDATE orders SET status = ? WHERE id = ?', [status, id]);
+  await pool.query('UPDATE orders SET order_status = ? WHERE id = ?', [status, id]);
 };
 
 const updatePaymentStatus = async (id, paymentStatus) => {
   await pool.query('UPDATE orders SET payment_status = ? WHERE id = ?', [paymentStatus, id]);
 };
 
-const findByOrderNumber = async (orderNumber) => {
+const findByOrderNumber = async (orderRef) => {
   const [rows] = await pool.query(
-    'SELECT * FROM orders WHERE order_number = ? LIMIT 1',
-    [orderNumber]
+    'SELECT * FROM orders WHERE order_ref = ? LIMIT 1',
+    [orderRef]
   );
   return rows[0] || null;
 };
