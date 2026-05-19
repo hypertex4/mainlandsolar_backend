@@ -1,38 +1,45 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/mainla12/backend.mainlandsolar.com"
+PassengerBaseURI "/"
+PassengerNodejs "/home/mainla12/nodevenv/backend.mainlandsolar.com/20/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+
 # -----------------------------------------------------------------------
-# Mainland Solar API — cache bypass rules
+# Cache bypass — Mainland Solar Node.js API
 #
-# This file lives in the Node.js app root.  Apache / LiteSpeed reads it
-# before proxying to Node, so these directives fire at the web-server
-# layer regardless of what headers Node.js sets.
-#
-# Purpose: stop WordPress caching plugins (LiteSpeed Cache, W3 Total
-# Cache, WP Rocket, etc.) from storing /api/* responses as static pages.
+# This entire domain (backend.mainlandsolar.com) is a REST API served
+# via Passenger. No response should ever be cached by LiteSpeed or any
+# proxy layer sitting in front of it.
 # -----------------------------------------------------------------------
 
-# -- LiteSpeed Cache plugin bypass --------------------------------------
-# SetEnvIf tells LiteSpeed not to cache any URL under /api/
-<IfModule LiteSpeed>
+# LiteSpeed native cache bypass.
+# RewriteRule with E=no-cache:1 sets the internal LiteSpeed flag that
+# prevents the page cache from storing or serving the response.
+# CacheEnable off / disables the LiteSpeed built-in cache for all paths.
+<IfModule Litespeed>
     RewriteEngine On
-    RewriteRule ^api/ - [E=no-cache:1,L]
-    SetEnvIf Request_URI "^/api/" no-cache=1
+    RewriteRule .* - [E=no-cache:1,L]
+    CacheEnable off /
 </IfModule>
 
-# -- Apache mod_headers -------------------------------------------------
-# Force cache-busting headers on every /api/ response at the server level
+# Apache mod_headers fallback (also read by LiteSpeed in Apache-compat mode).
+# "always" ensures the headers are set even on error/redirect responses.
 <IfModule mod_headers.c>
-    <LocationMatch "^/api/">
-        Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
-        Header always set Pragma "no-cache"
-        Header always set Expires "0"
-        Header always set Surrogate-Control "no-store"
-        Header always set X-LiteSpeed-Cache-Control "no-cache"
-        Header always set Vary "*"
-    </LocationMatch>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+    Header always set Surrogate-Control "no-store"
+    Header always set X-LiteSpeed-Cache-Control "no-cache"
+    Header always set Vary "*"
 </IfModule>
 
-# -- Apache mod_cache bypass --------------------------------------------
+# Apache mod_cache bypass (belt-and-suspenders).
 <IfModule mod_cache.c>
-    <LocationMatch "^/api/">
-        CacheDisable On
-    </LocationMatch>
+    CacheDisable On
 </IfModule>
