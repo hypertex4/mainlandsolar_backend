@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS email_queue (
   INDEX idx_status_queued (status, queued_at)
 );
 
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE IF NOT EXISTS product_categories (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   slug VARCHAR(120) NOT NULL UNIQUE,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS categories (
   is_active TINYINT(1) NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL,
+  FOREIGN KEY (parent_id) REFERENCES product_categories(id) ON DELETE SET NULL,
   INDEX idx_slug (slug),
   INDEX idx_parent (parent_id)
 );
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS products (
   sort_order INT UNSIGNED NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+  FOREIGN KEY (category_id) REFERENCES product_categories(id) ON DELETE SET NULL,
   FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL,
   INDEX idx_slug (slug),
   INDEX idx_category (category_id),
@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS payments (
   INDEX idx_reference (reference)
 );
 
-CREATE TABLE IF NOT EXISTS audit_bookings (
+CREATE TABLE IF NOT EXISTS solar_audits (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNSIGNED NULL,
   full_name VARCHAR(200) NOT NULL,

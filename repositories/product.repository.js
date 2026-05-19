@@ -66,7 +66,7 @@ const findAll = async ({ page = 1, limit = 30, categoryId, brandId, minPrice, ma
   `;
 
   const joins = `
-    LEFT JOIN categories c ON c.id = p.category_id
+    LEFT JOIN product_categories c ON c.id = p.category_id
     LEFT JOIN brands b ON b.id = p.brand_id
     LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
   `;
@@ -110,7 +110,7 @@ const findBySlug = async (slug) => {
   const [rows] = await pool.query(
     `SELECT p.*, c.name AS category_name, b.name AS brand_name
      FROM products p
-     LEFT JOIN categories c ON c.id = p.category_id
+     LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
      WHERE p.slug = ? AND p.is_active = 1 LIMIT 1`,
     [slug]
@@ -130,7 +130,7 @@ const findById = async (id) => {
   const [rows] = await pool.query(
     `SELECT p.*, c.name AS category_name, b.name AS brand_name
      FROM products p
-     LEFT JOIN categories c ON c.id = p.category_id
+     LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
      WHERE p.id = ? AND p.is_active = 1 LIMIT 1`,
     [id]
@@ -153,7 +153,7 @@ const findFeatured = async (limit = 8) => {
             c.name AS category_name, b.name AS brand_name,
             pi.url AS primary_image, pi.alt_text AS primary_image_alt
      FROM products p
-     LEFT JOIN categories c ON c.id = p.category_id
+     LEFT JOIN product_categories c ON c.id = p.category_id
      LEFT JOIN brands b ON b.id = p.brand_id
      LEFT JOIN product_images pi ON pi.product_id = p.id AND pi.is_primary = 1
      WHERE p.is_featured = 1 AND p.is_active = 1
