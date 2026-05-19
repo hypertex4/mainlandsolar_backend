@@ -38,14 +38,18 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-// Prevent WordPress / LiteSpeed / server-level HTTP caches from storing
-// API responses. Without this, caching plugins on the same cPanel server
-// serve stale JSON to every caller until the cache TTL expires.
+// Prevent ALL server-level HTTP caches from storing API responses.
+// Covers: standard HTTP caches, Varnish, LiteSpeed Cache (WordPress plugin),
+// and any CDN sitting in front of cPanel.
 app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Surrogate-Control', 'no-store');
+  // LiteSpeed-specific bypass (used by LiteSpeed Cache plugin for WordPress)
+  res.setHeader('X-LiteSpeed-Cache-Control', 'no-cache');
+  // Vary: * marks the response as unique per request — no proxy will cache it
+  res.setHeader('Vary', '*');
   next();
 });
 

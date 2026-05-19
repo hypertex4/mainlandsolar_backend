@@ -1,0 +1,38 @@
+# -----------------------------------------------------------------------
+# Mainland Solar API — cache bypass rules
+#
+# This file lives in the Node.js app root.  Apache / LiteSpeed reads it
+# before proxying to Node, so these directives fire at the web-server
+# layer regardless of what headers Node.js sets.
+#
+# Purpose: stop WordPress caching plugins (LiteSpeed Cache, W3 Total
+# Cache, WP Rocket, etc.) from storing /api/* responses as static pages.
+# -----------------------------------------------------------------------
+
+# -- LiteSpeed Cache plugin bypass --------------------------------------
+# SetEnvIf tells LiteSpeed not to cache any URL under /api/
+<IfModule LiteSpeed>
+    RewriteEngine On
+    RewriteRule ^api/ - [E=no-cache:1,L]
+    SetEnvIf Request_URI "^/api/" no-cache=1
+</IfModule>
+
+# -- Apache mod_headers -------------------------------------------------
+# Force cache-busting headers on every /api/ response at the server level
+<IfModule mod_headers.c>
+    <LocationMatch "^/api/">
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+        Header always set Surrogate-Control "no-store"
+        Header always set X-LiteSpeed-Cache-Control "no-cache"
+        Header always set Vary "*"
+    </LocationMatch>
+</IfModule>
+
+# -- Apache mod_cache bypass --------------------------------------------
+<IfModule mod_cache.c>
+    <LocationMatch "^/api/">
+        CacheDisable On
+    </LocationMatch>
+</IfModule>
