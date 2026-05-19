@@ -38,6 +38,17 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
+// Prevent WordPress / LiteSpeed / server-level HTTP caches from storing
+// API responses. Without this, caching plugins on the same cPanel server
+// serve stale JSON to every caller until the cache TTL expires.
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+});
+
 app.use('/api', routes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
