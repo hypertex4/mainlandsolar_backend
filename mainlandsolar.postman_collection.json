@@ -1,0 +1,1364 @@
+{
+  "info": {
+    "name": "Mainland Solar API NEW",
+    "description": "Complete API collection — authentication, products, cart, orders, Paystack payments, audit bookings, addresses, wishlist and reviews.\n\nCollection variables are auto-saved by test scripts:\n- access_token / refresh_token  → set on Login & Refresh Token\n- reset_token                   → set on Verify Reset OTP\n- cart_token                    → set on every cart response\n\nBase URL: {{base_url}}  (default: http://localhost:5000)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:5000", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "reset_token", "value": "", "type": "string" },
+    { "key": "cart_token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"John\",\n  \"lastname\": \"Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password1\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Account created. Please check your email to activate your account.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Activate Account",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "activate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"482910\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Account activated successfully. You can now log in.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Resend Activation OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/resend-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "resend-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Activation code resent. Please check your email.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data) {",
+                  "  pm.collectionVariables.set('access_token',  res.data.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password1\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"access_token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"refresh_token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"user\": {\n      \"id\": 1,\n      \"firstname\": \"John\",\n      \"lastname\": \"Doe\",\n      \"email\": \"john.doe@example.com\",\n      \"avatar\": null,\n      \"is_active\": true,\n      \"created_at\": \"2025-01-15T10:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Google Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data) {",
+                  "  pm.collectionVariables.set('access_token',  res.data.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google-login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "google-login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"<google_id_token_or_access_token>\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Google login successful\",\n  \"data\": {\n    \"access_token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"refresh_token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"user\": {\n      \"id\": 2,\n      \"firstname\": \"Jane\",\n      \"lastname\": \"Smith\",\n      \"email\": \"jane@gmail.com\",\n      \"avatar\": \"https://lh3.googleusercontent.com/...\",\n      \"is_active\": true,\n      \"created_at\": \"2025-01-15T10:00:00.000Z\"\n    }\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data) {",
+                  "  pm.collectionVariables.set('access_token',  res.data.access_token);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Token refreshed\",\n  \"data\": {\n    \"access_token\": \"eyJhbGciOiJIUzI1NiJ9...\",\n    \"refresh_token\": \"eyJhbGciOiJIUzI1NiJ9...\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Logged out successfully\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"If that email is registered, a reset code has been sent.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Verify Reset OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.reset_token) {",
+                  "  pm.collectionVariables.set('reset_token', res.data.reset_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-reset-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-reset-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"otp\": \"319204\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"OTP verified successfully\",\n  \"data\": {\n    \"reset_token\": \"eyJhbGciOiJIUzI1NiJ9...\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reset_token\": \"{{reset_token}}\",\n  \"password\": \"NewPassword1\",\n  \"confirm_password\": \"NewPassword1\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Password reset successful. Please log in with your new password.\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Profile fetched successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"firstname\": \"John\",\n    \"lastname\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"google_id\": null,\n    \"avatar\": null,\n    \"is_active\": 1,\n    \"created_at\": \"2025-01-15T10:00:00.000Z\",\n    \"updated_at\": \"2025-01-15T10:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstname\": \"Johnny\",\n  \"lastname\": \"Doe\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"firstname\": \"Johnny\",\n    \"lastname\": \"Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"avatar\": null,\n    \"is_active\": 1,\n    \"created_at\": \"2025-01-15T10:00:00.000Z\",\n    \"updated_at\": \"2025-01-16T08:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Update Password",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "password"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"Password1\",\n  \"new_password\": \"NewPassword1\",\n  \"confirm_password\": \"NewPassword1\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Password updated successfully\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Products & Catalog",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products?page=1&limit=12&sort=newest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                {
+                  "key": "sort",
+                  "value": "newest",
+                  "description": "newest | price_asc | price_desc | popular"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "category slug"
+                },
+                {
+                  "key": "brand",
+                  "value": "",
+                  "disabled": true,
+                  "description": "brand slug"
+                },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "capacity", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Products fetched successfully\",\n  \"data\": {\n    \"data\": [\n      {\n        \"id\": 1,\n        \"name\": \"12KW Lithium Package\",\n        \"slug\": \"12kw-lithium-package\",\n        \"sku\": \"PKG-101\",\n        \"price\": \"15500000.00\",\n        \"compare_price\": null,\n        \"capacity\": \"12KW\",\n        \"stock_quantity\": 5,\n        \"is_in_stock\": 1,\n        \"is_featured\": 1,\n        \"category_name\": \"Solar Packages\",\n        \"brand_name\": \"Lithium\",\n        \"primary_image\": \"/uploads/products/lithium.jpg\"\n      }\n    ],\n    \"pagination\": {\n      \"page\": 1,\n      \"limit\": 12,\n      \"total\": 72,\n      \"pages\": 6\n    }\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/search?search=inverter&sort=price_asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "search"],
+              "query": [
+                { "key": "search", "value": "inverter" },
+                { "key": "sort", "value": "price_asc" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/featured",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "featured"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Featured products fetched\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"12KW Lithium Package\",\n      \"slug\": \"12kw-lithium-package\",\n      \"price\": \"15500000.00\",\n      \"is_in_stock\": 1,\n      \"primary_image\": \"/uploads/products/lithium.jpg\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Product by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/12kw-lithium-package",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "12kw-lithium-package"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Product fetched successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"12KW Lithium Package\",\n    \"slug\": \"12kw-lithium-package\",\n    \"sku\": \"PKG-101\",\n    \"description\": \"Complete 12KW lithium solar package including inverter, batteries, panels and accessories.\",\n    \"price\": \"15500000.00\",\n    \"compare_price\": null,\n    \"capacity\": \"12KW\",\n    \"stock_quantity\": 5,\n    \"is_in_stock\": 1,\n    \"is_featured\": 1,\n    \"category_name\": \"Solar Packages\",\n    \"brand_name\": \"Lithium\",\n    \"images\": [\n      { \"id\": 1, \"url\": \"/uploads/products/lithium.jpg\", \"is_primary\": 1, \"sort_order\": 0 }\n    ]\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/categories",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "categories"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Categories fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Solar Packages\",\n      \"slug\": \"solar-packages\",\n      \"description\": \"Complete solar energy packages\",\n      \"image\": null,\n      \"sort_order\": 0,\n      \"children\": []\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Inverters\",\n      \"slug\": \"inverters\",\n      \"description\": null,\n      \"image\": null,\n      \"sort_order\": 1,\n      \"children\": []\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Category by Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/categories/solar-packages",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "categories", "solar-packages"]
+            }
+          }
+        },
+
+        {
+          "name": "List Brands",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/brands",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "brands"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Brands fetched successfully\",\n  \"data\": [\n    { \"id\": 1, \"name\": \"Lithium\", \"slug\": \"lithium\", \"logo\": null },\n    { \"id\": 2, \"name\": \"Taico\",   \"slug\": \"taico\",   \"logo\": null }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products/12kw-lithium-package/reviews?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "12kw-lithium-package", "reviews"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Reviews fetched successfully\",\n  \"data\": {\n    \"product\": { \"id\": 1, \"name\": \"12KW Lithium Package\", \"avg_rating\": \"4.50\", \"total_reviews\": 2 },\n    \"data\": [\n      {\n        \"id\": 1,\n        \"rating\": 5,\n        \"title\": \"Excellent product\",\n        \"body\": \"Works perfectly for my home.\",\n        \"created_at\": \"2025-02-01T09:00:00.000Z\",\n        \"user_firstname\": \"John\",\n        \"user_lastname\": \"D.\"\n      }\n    ],\n    \"pagination\": { \"page\": 1, \"limit\": 10, \"total\": 2, \"pages\": 1 }\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Submit Product Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/products/12kw-lithium-package/reviews",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products", "12kw-lithium-package", "reviews"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent product\",\n  \"body\": \"Works perfectly for my home office. Installation was smooth.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Review submitted and awaiting approval\",\n  \"data\": {\n    \"id\": 3,\n    \"product_id\": 1,\n    \"user_id\": 1,\n    \"rating\": 5,\n    \"title\": \"Excellent product\",\n    \"body\": \"Works perfectly for my home office.\",\n    \"status\": \"pending\",\n    \"created_at\": \"2025-05-19T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Cart",
+      "description": "Pass x-cart-token header on every request. The token is returned in every cart response and auto-saved to {{cart_token}} by the test scripts.",
+      "item": [
+        {
+          "name": "Get Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.cart && res.data.cart.session_token) {",
+                  "  pm.collectionVariables.set('cart_token', res.data.cart.session_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-cart-token", "value": "{{cart_token}}" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true,
+                "description": "Optional — include if logged in"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Cart fetched\",\n  \"data\": {\n    \"cart\": {\n      \"id\": 1,\n      \"session_token\": \"a1b2c3d4e5f6...\",\n      \"user_id\": null\n    },\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_id\": 1,\n        \"product_name\": \"12KW Lithium Package\",\n        \"unit_price\": \"15500000.00\",\n        \"quantity\": 1,\n        \"subtotal\": \"15500000.00\",\n        \"primary_image\": \"/uploads/products/lithium.jpg\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Add Item to Cart",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.cart && res.data.cart.session_token) {",
+                  "  pm.collectionVariables.set('cart_token', res.data.cart.session_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-cart-token", "value": "{{cart_token}}" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true
+              },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart/items",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart", "items"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1,\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Update Cart Item",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.cart && res.data.cart.session_token) {",
+                  "  pm.collectionVariables.set('cart_token', res.data.cart.session_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-cart-token", "value": "{{cart_token}}" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true
+              },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart", "items", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-cart-token", "value": "{{cart_token}}" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart/items/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart", "items", "1"]
+            }
+          }
+        },
+
+        {
+          "name": "Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-cart-token", "value": "{{cart_token}}" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart"]
+            }
+          }
+        },
+
+        {
+          "name": "Merge Guest Cart (on login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.cart && res.data.cart.session_token) {",
+                  "  pm.collectionVariables.set('cart_token', res.data.cart.session_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/cart/merge",
+              "host": ["{{base_url}}"],
+              "path": ["api", "cart", "merge"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guest_token\": \"{{cart_token}}\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Cart merged successfully\",\n  \"data\": {\n    \"cart\": { \"id\": 2, \"session_token\": \"x9y8z7...\", \"user_id\": 1 },\n    \"items\": [\n      { \"id\": 2, \"product_id\": 1, \"quantity\": 1, \"unit_price\": \"15500000.00\" }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "List Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "addresses"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Addresses fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"label\": \"Home\",\n      \"full_name\": \"John Doe\",\n      \"phone\": \"08012345678\",\n      \"address_line\": \"12 Mainland Street\",\n      \"city\": \"Lagos\",\n      \"state\": \"Lagos\",\n      \"is_default\": 1\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Create Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/addresses",
+              "host": ["{{base_url}}"],
+              "path": ["api", "addresses"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"full_name\": \"John Doe\",\n  \"phone\": \"08012345678\",\n  \"address_line\": \"12 Mainland Street, Ikeja\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"is_default\": true\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Address created successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"label\": \"Home\",\n    \"full_name\": \"John Doe\",\n    \"phone\": \"08012345678\",\n    \"address_line\": \"12 Mainland Street, Ikeja\",\n    \"city\": \"Lagos\",\n    \"state\": \"Lagos\",\n    \"is_default\": 1\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/addresses/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "addresses", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Office\",\n  \"phone\": \"08098765432\"\n}"
+            }
+          }
+        },
+
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/addresses/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "addresses", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressId\": 1,\n  \"notes\": \"Please call before delivery.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Order created successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"order_ref\": \"MS-1716110400000\",\n    \"order_status\": \"pending\",\n    \"subtotal\": \"15500000.00\",\n    \"delivery_fee\": \"0.00\",\n    \"total_amount\": \"15500000.00\",\n    \"payment_status\": \"unpaid\",\n    \"delivery_address\": \"{\\\"full_name\\\":\\\"John Doe\\\",\\\"phone\\\":\\\"08012345678\\\",\\\"address_line\\\":\\\"12 Mainland Street\\\"}\",\n    \"delivery_city\": \"Lagos\",\n    \"delivery_state\": \"Lagos\",\n    \"items\": [\n      {\n        \"id\": 1,\n        \"product_id\": 1,\n        \"product_name\": \"12KW Lithium Package\",\n        \"qty\": 1,\n        \"unit_price\": \"15500000.00\",\n        \"subtotal\": \"15500000.00\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "List My Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Orders fetched successfully\",\n  \"data\": {\n    \"data\": [\n      {\n        \"id\": 1,\n        \"order_ref\": \"MS-1716110400000\",\n        \"order_status\": \"pending\",\n        \"total_amount\": \"15500000.00\",\n        \"payment_status\": \"unpaid\",\n        \"item_count\": 1,\n        \"created_at\": \"2025-05-19T12:00:00.000Z\"\n      }\n    ],\n    \"pagination\": { \"page\": 1, \"limit\": 10, \"total\": 1, \"pages\": 1 }\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Get Order Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "1"]
+            }
+          }
+        },
+
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/orders/1/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "orders", "1", "cancel"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Order cancelled successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"order_ref\": \"MS-1716110400000\",\n    \"order_status\": \"cancelled\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Initiate Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/initiate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "initiate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": 1\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Payment initiated\",\n  \"data\": {\n    \"payment_url\": \"https://checkout.paystack.com/abcdef123456\",\n    \"reference\": \"MS_1716110400000_1\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Payment Callback (Paystack redirect)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/payments/callback?reference=MS_1716110400000_1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "callback"],
+              "query": [{ "key": "reference", "value": "MS_1716110400000_1" }]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK — payment verified",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Payment verified\",\n  \"data\": {\n    \"id\": 1,\n    \"order_ref\": \"MS-1716110400000\",\n    \"order_status\": \"confirmed\",\n    \"payment_status\": \"confirmed\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Paystack Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "x-paystack-signature",
+                "value": "<hmac_sha512_signature>"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/payments/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "webhook"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"charge.success\",\n  \"data\": {\n    \"reference\": \"MS_1716110400000_1\",\n    \"status\": \"success\",\n    \"amount\": 1550000000,\n    \"currency\": \"NGN\",\n    \"paid_at\": \"2025-05-19T12:30:00.000Z\"\n  }\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Webhook processed\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Solar Audit",
+      "item": [
+        {
+          "name": "Get Available Time Slots",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/audit/time-slots?date=2025-06-10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "audit", "time-slots"],
+              "query": [{ "key": "date", "value": "2025-06-10" }]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Time slots fetched\",\n  \"data\": [\n    { \"time\": \"08:00-10:00\", \"booked\": 2, \"available\": 3, \"max\": 5, \"is_full\": false },\n    { \"time\": \"10:00-12:00\", \"booked\": 5, \"available\": 0, \"max\": 5, \"is_full\": true },\n    { \"time\": \"12:00-14:00\", \"booked\": 0, \"available\": 5, \"max\": 5, \"is_full\": false },\n    { \"time\": \"14:00-16:00\", \"booked\": 1, \"available\": 4, \"max\": 5, \"is_full\": false },\n    { \"time\": \"16:00-18:00\", \"booked\": 3, \"available\": 2, \"max\": 5, \"is_full\": false }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Book Solar Audit",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "disabled": true,
+                "description": "Optional — include if logged in"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/audit/book",
+              "host": ["{{base_url}}"],
+              "path": ["api", "audit", "book"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Doe\",\n  \"phone\": \"08012345678\",\n  \"email\": \"john.doe@example.com\",\n  \"address\": \"12 Mainland Street, Ikeja\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"building_type\": \"residential\",\n  \"monthly_bill\": 85000,\n  \"preferred_date\": \"2025-06-10\",\n  \"preferred_time\": \"08:00-10:00\",\n  \"notes\": \"3-bedroom duplex, currently on generator 10 hours daily.\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Audit booking submitted successfully\",\n  \"data\": {\n    \"id\": 1,\n    \"audit_ref\": \"SA-1716110400000\",\n    \"customer_name\": \"John Doe\",\n    \"customer_phone\": \"08012345678\",\n    \"preferred_date\": \"2025-06-10\",\n    \"preferred_time\": \"08:00-10:00\",\n    \"status\": \"new\",\n    \"source\": \"website\",\n    \"created_at\": \"2025-05-19T12:00:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "My Audit Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/audit/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "audit", "bookings"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Bookings fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"audit_ref\": \"SA-1716110400000\",\n      \"preferred_date\": \"2025-06-10\",\n      \"preferred_time\": \"08:00-10:00\",\n      \"status\": \"new\",\n      \"created_at\": \"2025-05-19T12:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/wishlist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "wishlist"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Wishlist fetched successfully\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"product_id\": 1,\n      \"product_name\": \"12KW Lithium Package\",\n      \"price\": \"15500000.00\",\n      \"is_in_stock\": 1,\n      \"primary_image\": \"/uploads/products/lithium.jpg\",\n      \"added_at\": \"2025-05-19T10:00:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/wishlist",
+              "host": ["{{base_url}}"],
+              "path": ["api", "wishlist"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": 1\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Product added to wishlist\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/wishlist/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "wishlist", "1"]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                { "key": "Content-Type", "value": "application/json" }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Product removed from wishlist\",\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
