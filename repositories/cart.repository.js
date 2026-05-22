@@ -61,11 +61,11 @@ const getItems = async (cartId) => {
   const [rows] = await pool.query(
     `SELECT ci.id, ci.product_id, ci.quantity, ci.unit_price,
             p.name AS product_name, p.slug AS product_slug, p.sku AS product_sku,
-            p.stock_quantity, p.is_in_stock,
-            pi.url AS image_url, pi.alt_text AS image_alt
+            p.stock_qty AS stock_quantity, (p.stock_qty > 0) AS is_in_stock,
+            pi.image_path AS image_url
      FROM cart_items ci
      JOIN products p ON p.id = ci.product_id
-     LEFT JOIN product_images pi ON pi.product_id = ci.product_id AND pi.is_primary = 1
+     LEFT JOIN product_images pi ON pi.product_id = ci.product_id AND pi.is_featured = 1
      WHERE ci.cart_id = ?
      ORDER BY ci.created_at ASC`,
     [cartId]

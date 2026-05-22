@@ -42,15 +42,15 @@ const resolveCart = async (sessionToken, userId) => {
   return { cart, items };
 };
 
-const addToCart = async (sessionToken, userId, { productId, quantity }) => {
-  const product = await productRepo.findById(productId);
+const addToCart = async (sessionToken, userId, { product_id, quantity }) => {
+  const product = await productRepo.findById(product_id);
   if (!product) throw new AppError('Product not found', 404);
   if (!product.is_in_stock || product.stock_quantity < quantity) {
     throw new AppError('Product is out of stock or insufficient quantity', 400);
   }
 
   const cart = await getOrCreateCart(sessionToken, userId);
-  await cartRepo.addItem(cart.id, productId, quantity, product.price);
+  await cartRepo.addItem(cart.id, product_id, quantity, product.price);
 
   const items = await cartRepo.getItems(cart.id);
   return { cart, items };
